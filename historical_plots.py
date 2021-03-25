@@ -5,6 +5,7 @@ import os
 
 # shows all plots on on chart
 directory = r'./datasets/'
+index = 1
 for filename in os.listdir(directory):
     if filename.endswith(".csv"):
         ticker = filename.split(".")
@@ -13,12 +14,11 @@ for filename in os.listdir(directory):
         ticker_df = pd.read_csv(os.path.join(directory, filename))
         x = ticker_df['Date']
         y = ticker_df['Adj Close']
+        plt.figure(index)
         plt.plot(x, y, label=ticker)
         plt.legend(loc="upper left")
         plt.xlabel('Date')
-        plt.ylabel('Adj Close')
+        plt.ylabel('Adj Close ($)')
+        index += 1
 
 plt.show()
-
-# to show each individual stock move plt.show() to the end of the loop
-# however, only one ticker can be shown at a time
