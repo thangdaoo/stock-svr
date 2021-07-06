@@ -1,51 +1,140 @@
 import numpy as np
 import pandas as pd
+import os
+import time
 from sklearn.svm import SVR
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
 from sklearn.model_selection import TimeSeriesSplit
+from sklearn import metrics
+from matplotlib import pyplot as plt
+from statsmodels.graphics.tsaplots import plot_pacf
+
+# ticker = pd.read_csv("./datasets/AAPL.csv")
+# ticker = pd.DataFrame(ticker)
+# ticker = ticker.drop(columns=['Open','High','Low','Close','Volume'])
+# date = ticker['Date']
+# date = pd.to_datetime(ticker.Date)
+# close = ticker['Adj Close']
+
+# X_train, X_val, y_train, y_val = [], [], [], []
+
+# tscv = TimeSeriesSplit(n_splits=5)
+# for train_index, val_index in tscv.split(date):
+#     X_train.append(date[train_index])
+#     X_val.append(date[val_index])
+#     y_train.append(close[train_index])
+#     y_val.append(close[val_index])
+
+# Xtrain, ytrain, Xval, yval = np.array(X_train[0]), np.array(y_train[0]), np.array(X_val[0]), np.array(y_val[0])
+
+# lag = 180
+# x = np.zeros((len(ytrain) - lag + 1,lag))
+# rowNumber = 0
+
+# for i in range(lag,len(ytrain)+1):
+#     x[rowNumber,] = ytrain[(i-lag):(i)]
+#     rowNumber += 1
+# x = x[:-1]
+# y = ytrain[179:-1]
+# y_val = ytrain[180:]
+# x_val = Xtrain[180:]
+
+# linear_svr = SVR(kernel='linear', C=1e10)
+# rbf_svr = SVR(kernel='rbf', C=1e10, gamma=0.1)
+# y_lin = linear_svr.fit(x, y).predict(x)
+# y_rbf = rbf_svr.fit(x, y).predict(x)
+
+# rmse_lin = metrics.mean_squared_error(y, y_lin, squared=False)
+# rmse_rbf = metrics.mean_squared_error(y, y_rbf, squared=False)
+# mape_lin = metrics.mean_absolute_percentage_error(y, y_lin)
+# mape_rbf = metrics.mean_absolute_percentage_error(y, y_rbf)
+
+# plt.plot(x_val, y, color='red', label='Data')
+# plt.plot(x_val, y_lin, color='green', linestyle='dotted', label='Linear Model')
+# plt.plot(x_val, y_rbf, color='blue', linestyle='dotted', label='RBF Model')
+# plt.legend(loc="upper left")
+# plt.title("AAPL")
+# plt.show()
 
 
-# pd.set_option('display.max_rows', None)
-aapl = pd.read_csv("./datasets/AAPL.csv")
-aapl_df = pd.DataFrame(aapl)
-aapl_df['Date'] = pd.to_datetime(aapl_df.Date)
-X = aapl_df['Date']
-y = aapl_df['Adj Close']
+directory = r'./datasets/'
+for filename in os.listdir(directory):
+    if filename.endswith(".csv"):
+        ticker = filename.split(".")
+        ticker = ticker[0]
+        print()
+        print(ticker)
+        ticker_df = pd.read_csv(os.path.join(directory, filename))
+        date = ticker_df['Date']
+        date = pd.to_datetime(ticker_df.Date)
+        close = ticker_df['Adj Close']
 
-y_predictions = []
-X_train = []
-X_val = []
-y_train = []
-y_val = []
-tscv = TimeSeriesSplit(n_splits=5, test_size=250)
-for train_index, val_index in tscv.split(X):
-    # print("TRAIN:", X[train_index])
-    # print("TEST:", X[test_index])
-    # print('SPLIT:', split)
-    # print('-------------------------------------')
-    X_train.append(X[train_index])
-    X_val.append(X[val_index])
-    y_train.append(y[train_index])
-    y_val.append(y[val_index])
-    # Xtrain_arr = X_train.values
-    # ytrain_arr = y_train.values
-    # ytest_arr = y_val.values
-    # reshaped_Xtrain = Xtrain_arr.reshape(-1,1)
-    # reshaped_ytrain = ytrain_arr.reshape(-1,1)
-    # reshaped_ytest = ytest_arr.reshape(-1,1)
-    # SVRModel = SVR(kernel='rbf')
-    # SVRModel.fit(reshaped_Xtrain, reshaped_ytrain.ravel())
-    # y_pred = SVRModel.predict(reshaped_ytest.ravel())
-    # y_predictions.append(y_pred)
-    # reg = make_pipeline(StandardScaler(), SVR(C=1.0, epsilon=0.2))
-    # reg.fit(X_train, y_train)
+        X_train, X_val, y_train, y_val = [], [], [], []
 
-aapl_Xtrain, aapl_Ytrain = X_train[0], y_train[0]
-aapl_Xtrain, aapl_Ytrain = np.array(aapl_Xtrain), np.array(aapl_Ytrain)
-print(aapl_Xtrain)
-linear_svr = SVR(kernel='linear', C=1000.0)
-# linear_svr.fit(aapl_Xtrain, aapl_Ytrain)
+        tscv = TimeSeriesSplit(n_splits=5)
+        for train_index, val_index in tscv.split(date):
+            X_train.append(date[train_index])
+            X_val.append(date[val_index])
+            y_train.append(close[train_index])
+            y_val.append(close[val_index])
 
+        plot = 1
+        index = 1
+
+        # plot_pacf(close, lags=90)
+        # plt.title(ticker)
+        # plt.xlabel('Lag')
+        # plt.ylabel('Partial Autocorrelation')
+        # plot += 1
+        # plt.show()
+
+        for split in range(5):
+            start = time.time()
+            Xtrain, ytrain, Xval, yval = np.array(X_train[split]), np.array(y_train[split]), np.array(X_val[split]), np.array(y_val[split])
+
+            lag = 180
+            x = np.zeros((len(ytrain) - lag + 1,lag))
+            rowNumber = 0
+
+            for i in range(lag,len(ytrain)+1):
+                x[rowNumber,] = ytrain[(i-lag):(i)]
+                rowNumber += 1
+            x = x[:-1]
+            y = ytrain[179:-1]
+            y_val = ytrain[180:]
+            x_val = Xtrain[180:]
+
+            linear_svr = SVR(kernel='linear', C=1e10)
+            rbf_svr = SVR(kernel='rbf', C=1e10, gamma=0.1)
+            y_lin = linear_svr.fit(x, y).predict(x)
+            y_rbf = rbf_svr.fit(x, y).predict(x)
+
+            rmse_lin = metrics.mean_squared_error(y_val, y_lin, squared=False)
+            rmse_rbf = metrics.mean_squared_error(y_val, y_rbf, squared=False)
+            print('lin rmse:',rmse_lin)
+            print('rbf rmse:',rmse_rbf)
+            print()
+
+            mape_lin = metrics.mean_absolute_percentage_error(y_val, y_lin)
+            mape_rbf = metrics.mean_absolute_percentage_error(y_val, y_rbf)
+            print('lin mape:',mape_lin)
+            print('rbf mape:',mape_rbf)
+            end = time.time()
+            print()
+            print('Time Elapsed:',end - start)
+            print('--------------Split ' + str(index) + '-----------------')
+            index += 1
+
+            fig, ax = plt.subplots()
+            # ax.axline([0,0],[1,1], color='black')
+            # plt.scatter(y, y, color='red', label='Data')
+            # plt.scatter(y, y_lin, color='green', label='Linear Model')
+            # plt.scatter(y, y_rbf, color='blue', label='RBF Model')
+
+            plt.plot(x_val, y, color='red', label='Data')
+            plt.plot(x_val, y_lin, color='green', linestyle='dotted', label='Linear Model')
+            plt.plot(x_val, y_rbf, color='blue', linestyle='dotted', label='RBF Model')
+
+            plt.title(ticker + " " + str(plot))
+            plt.legend(loc="upper left")
+            plot += 1
+            plt.show()
